@@ -1,0 +1,27 @@
+services:
+  # api:
+  #   container_name: rssgen_api
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - db
+  #   restart: unless-stopped
+
+  db:
+    container_name: rssgen_db
+    image: postgres:latest
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres:
