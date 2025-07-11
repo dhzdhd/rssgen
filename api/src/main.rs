@@ -3,12 +3,9 @@ mod models;
 mod routes;
 mod schema;
 
-use crate::{
-    error::AppError,
-    routes::feed::{analyze_url, create_feed, get_feeds},
-};
+use crate::routes::feed::{analyze_url, create_feed, get_feeds};
 use anyhow::{Ok, anyhow};
-use axum::{Router, response::IntoResponse, routing::get};
+use axum::{Router, routing::get};
 use deadpool_diesel::{
     Runtime,
     postgres::{Manager, Pool},
@@ -26,14 +23,6 @@ async fn index() -> &'static str {
 
 async fn healthcheck() -> &'static str {
     "Healthy"
-}
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> axum::response::Response {
-        let status = axum::http::StatusCode::INTERNAL_SERVER_ERROR;
-        let body = format!("Internal Server Error: {}", self.0);
-        (status, body).into_response()
-    }
 }
 
 async fn run_migrations(db_url: &str) -> Result<(), anyhow::Error> {

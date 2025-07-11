@@ -55,7 +55,7 @@ pub async fn analyze_url() -> Result<Json<Feed>, AppError> {
     let response = reqwest::get("https://www.dhzdhd.dev/blog/gleam-executable").await?;
     let html = response.text().await?;
 
-    let info = get_post_info(&html).await?;
+    let info = get_post_selectors(&html).await?;
     let raw_json = info
         .iter()
         .flat_map(|response| &response.candidates)
@@ -91,7 +91,7 @@ pub async fn analyze_url() -> Result<Json<Feed>, AppError> {
     }))
 }
 
-pub async fn get_post_info(html: &str) -> Result<GeminiResponse, AppError> {
+pub async fn get_post_selectors(html: &str) -> Result<GeminiResponse, AppError> {
     let client = reqwest::Client::new();
     let body = GeminiRequest {
         contents: vec![Content {
