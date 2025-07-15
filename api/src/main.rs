@@ -2,8 +2,9 @@ mod error;
 mod models;
 mod routes;
 mod schema;
+mod services;
 
-use crate::routes::feed::{analyze_url, create_feed, get_feeds};
+use crate::routes::feed::feeds_router;
 use anyhow::{Ok, anyhow};
 use axum::{Router, routing::get};
 use deadpool_diesel::{
@@ -52,8 +53,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let app = Router::new()
         .route("/", get(index))
         .route("/health", get(healthcheck))
-        .route("/feeds", get(get_feeds).post(create_feed))
-        .route("/feeds/analyze", get(analyze_url))
+        .nest("/feeds", feeds_router())
         .with_state(pool);
 
     if cfg!(debug_assertions) {
