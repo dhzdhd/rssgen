@@ -1,16 +1,14 @@
-use std::env;
-
 use crate::error::AppError;
 use crate::models::feed::Feed;
-use crate::models::gemini::{Content, GeminiRequest, GeminiResponse, GenerationConfig, Part};
-use crate::models::post::{Post, PostSelector};
+use crate::models::post::Post;
+use crate::models::selector::PostContentSelector;
 use crate::schema::feeds;
-use crate::schema::posts::dsl::*;
-use crate::services::common::get_gemini_request;
+use crate::services::common::{get_gemini_request, parse_gemini_json_response};
+use crate::services::selector::get_post_html;
 use axum::extract::Path;
 use axum::routing::get;
 use axum::{Json, extract::State};
-use chrono::NaiveDateTime;
+use chrono::Local;
 use deadpool_diesel::postgres::Pool;
 use diesel::prelude::*;
 
@@ -69,38 +67,18 @@ async fn scrape_posts(
     let html = response.text().await?;
 
     let info = get_gemini_request(&html, POST_SELECTOR_QUERY).await?;
-    let raw_json = info
-        .iter()
-        .flat_map(|response| &response.candidates)
-        .map(|candidate| &candidate.content)
-        .flat_map(|cont| &cont.parts)
-        .fold(String::new(), |acc, part| format!("{acc}{}", part.text));
+    let selectors = parse_gemini_json_response::<PostContentSelector>(info).await?;
 
-    let json = serde_json::from_str::<PostSelector>(&raw_json)?;
-
-    let (title_html, content_html) = tokio::task::spawn_blocking(move || {
-        let parsed = Html::parse_document(&html);
-        let title_selector = Selector::parse(&json.title).map_err(AppError::from_str)?;
-        let content_selector = Selector::parse(&json.content).map_err(AppError::from_str)?;
-
-        let title_html = parsed.select(&title_selector).next().unwrap().inner_html();
-        let content_html = parsed
-            .select(&content_selector)
-            .next()
-            .unwrap()
-            .inner_html();
-
-        Ok::<(String, String), AppError>((title_html, content_html))
-    })
-    .await??;
+    let (title_html, content_html) = get_post_html(&html, &selectors).await?;
+    let local_time = Local::now().naive_local();
 
     Ok(Json(Post {
         id: 0,
         feed_id: parent_feed_id,
         title: title_html,
-        link: "".to_string(),
+        link: feed.link,
         content: content_html,
-        created_at: NaiveDateTime::MAX,
-        updated_at: NaiveDateTime::MAX,
+        created_at: local_time,
+        updated_at: local_time,
     }))
 }

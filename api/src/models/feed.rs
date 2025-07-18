@@ -11,6 +11,7 @@ pub struct Feed {
     pub description: Option<String>,
     pub author: String,
     pub link: String,
+    pub pages: Vec<Option<String>>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }

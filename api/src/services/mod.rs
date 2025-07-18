@@ -1,2 +1,3 @@
 pub mod common;
-pub mod feed;
+pub mod rss;
+pub mod selector;

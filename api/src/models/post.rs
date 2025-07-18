@@ -26,9 +26,3 @@ pub struct NewPost {
     pub content: String,
     pub link: String,
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct PostSelector {
-    pub title: String,
-    pub content: String,
-}

@@ -1,5 +1,5 @@
 use crate::models::feed::NewFeed;
-use crate::models::post::PostSelector;
+use crate::models::selector::PostContentSelector;
 use crate::routes::post::posts_router;
 use crate::schema::feeds::dsl::*;
 use crate::services::common::get_html_selectors;
@@ -87,12 +87,14 @@ async fn analyze_url() -> Result<Json<Feed>, AppError> {
     let response = reqwest::get("https://www.dhzdhd.dev/blog/gleam-executable").await?;
     let html = response.text().await?;
 
-    let json = get_html_selectors::<PostSelector>(&html, FEED_SELECTOR_QUERY).await?;
+    let json = get_html_selectors::<PostContentSelector>(&html, FEED_SELECTOR_QUERY).await?;
 
     let (title_html, content_html) = tokio::task::spawn_blocking(move || {
         let parsed = Html::parse_document(&html);
-        let title_selector = Selector::parse(&json.title).map_err(AppError::from_str)?;
-        let content_selector = Selector::parse(&json.content).map_err(AppError::from_str)?;
+        let title_selector =
+            Selector::parse(&json.post_title_element).map_err(AppError::from_str)?;
+        let content_selector =
+            Selector::parse(&json.post_content_element).map_err(AppError::from_str)?;
 
         let title_html = parsed.select(&title_selector).next().unwrap().inner_html();
         let content_html = parsed
@@ -109,6 +111,7 @@ async fn analyze_url() -> Result<Json<Feed>, AppError> {
         id: 0,
         title: title_html,
         link: "".to_string(),
+        pages: Vec::new(),
         author: "".to_string(),
         description: Some(content_html),
         created_at: NaiveDateTime::MAX,
