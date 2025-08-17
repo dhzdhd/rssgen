@@ -13,7 +13,6 @@ use deadpool_diesel::postgres::Pool;
 use diesel::prelude::*;
 
 use axum::Router;
-use scraper::{Html, Selector};
 
 pub fn posts_router() -> Router<Pool> {
     Router::new()

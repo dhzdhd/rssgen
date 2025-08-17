@@ -29,3 +29,20 @@ pub struct PostContentSelector {
 pub struct PostListSelector {
     pub post_list_element: String,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct FeedContentResponse {
+    pub title: Option<String>,
+    pub author: Option<String>,
+    pub description: Option<String>,
+    pub next_page_element: Option<String>,
+    pub post_link_element: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FeedContent {
+    pub title: Option<String>,
+    pub author: Option<String>,
+    pub description: Option<String>,
+    pub links: Vec<String>,
+}
